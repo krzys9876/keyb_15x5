@@ -1,0 +1,6 @@
+1. wydłużyć pady przy porcie USB
+2. powiększyć pady dla LED
+3. wydłużyć pady dla Atmega32u4
+4. dodać silkscreen
+5. pokazać orientację LED, diod i IC
+6. opisać piny ICSP i AUX
