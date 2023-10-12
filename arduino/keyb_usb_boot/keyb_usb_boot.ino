@@ -193,7 +193,10 @@ void keepMouseMoving(KeyRaw code, uint8_t move) {
 
 bool isMouseMoving() {
   bool mouseMoving=false;
-  for(uint8_t i=0;i<keyb.getSize();i++) mouseMoving|=keyb.getVal(i).code(config.layer).isMouseMove();
+  for(uint8_t i=0;i<keyb.getSize();i++) {
+    KeyRaw code =  functionOverride(keyb.getVal(i));
+    mouseMoving = mouseMoving || code.isMouseMove();
+  }
   return mouseMoving;
 }
 
@@ -281,8 +284,9 @@ bool processRelease(long kMillis) {
 
 void clearIfEmpty(long kMillis) {
   static long lastReleaseMillis=0;
-  //NOTE: isEmpty is true only if all keys (incl FN, Mouse, Wheel) are released! This means that the mouse speed-up will not reset until mouse button is released.
-  if(keyb.isEmpty() && kMillis-lastReleaseMillis>RELEASE_MILLIS) {
+  //NOTE: isEmpty is true only if all keys (incl FN, Mouse, Wheel) are released
+  if((keyb.isEmpty() || (keyb.getSize()==1 && keyb.getVal(0).isMouse())) && kMillis-lastReleaseMillis>RELEASE_MILLIS) {
+    //Serial.println("empty" +String(kMillis));
     BootKeyboard.removeAll();
     BootKeyboard.send(); // this is actual effect!
     lastReleaseMillis=kMillis;
