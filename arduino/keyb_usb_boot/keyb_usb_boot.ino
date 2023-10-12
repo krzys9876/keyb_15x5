@@ -82,13 +82,7 @@ bool pressFunction(KeyPos pos) {
   if(pos.code(config.layer).isFunction() && !keyDebouncer[pos.index()].isPressConfirmed()) {
     KeyRaw code=pos.code(config.layer);
     switch(code.function) {
-      case FN_SWITCH : 
-        switch (config.layer) {
-          case 0 : config.layer=1; break;
-          case 1 : config.layer=0; break;
-           defaut : break;
-        }
-        break;
+      case FN_SWITCH : config.layer=1; break;
       case FN_MOUSE_BTN_LEFT : BootMouse.press(MOUSE_LEFT); break;
       case FN_MOUSE_BTN_RIGHT : BootMouse.press(MOUSE_RIGHT); break;
       case FN_MOUSE_WHEEL : config.wheel=true; break;
@@ -200,6 +194,7 @@ bool releaseFunction(KeyPos pos) {
     KeyRaw code=pos.code(config.layer);
     //Serial.println(code.function);
     switch(code.function) {
+      case FN_SWITCH : config.layer=0; break;
       case FN_MOUSE_BTN_LEFT : BootMouse.release(MOUSE_LEFT); break;
       case FN_MOUSE_BTN_RIGHT : BootMouse.release(MOUSE_RIGHT); break;
       case FN_MOUSE_WHEEL : config.wheel=false; break;
