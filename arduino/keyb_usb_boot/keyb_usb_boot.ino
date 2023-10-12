@@ -76,10 +76,24 @@ void readMatrix() {
   }
 }
 
+KeyRaw functionOverride(KeyPos pos) {
+  KeyRaw ret = pos.code(config.layer);
+  if(config.mouse) {
+    switch(ret.key) {
+      case KEY_UP_ARROW : ret.function = FN_MOUSE_UP; break;
+      case KEY_DOWN_ARROW : ret.function = FN_MOUSE_DOWN; break;
+      case KEY_LEFT_ARROW : ret.function = FN_MOUSE_LEFT; break;
+      case KEY_RIGHT_ARROW : ret.function = FN_MOUSE_RIGHT; break;
+    }
+  }
+  return ret;
+}
+
 bool pressFunction(KeyPos pos) {
   bool pressed=false;
-  //Serial.println("pressed Function");
-  if(pos.code(config.layer).isFunction() && !keyDebouncer[pos.index()].isPressConfirmed()) {
+  Serial.println("pressed Function");
+  KeyRaw code = functionOverride(pos);
+  if(code.isFunction() && !keyDebouncer[pos.index()].isPressConfirmed()) {
     KeyRaw code=pos.code(config.layer);
     switch(code.function) {
       case FN_SWITCH : config.layer=1; break;
@@ -87,8 +101,8 @@ bool pressFunction(KeyPos pos) {
       case FN_MOUSE_BTN_LEFT : BootMouse.press(MOUSE_LEFT); break;
       case FN_MOUSE_BTN_RIGHT : BootMouse.press(MOUSE_RIGHT); break;
       case FN_MOUSE_WHEEL : config.wheel=true; break;
-      case FN_MOUSE_UP : if(config.wheel) BootMouse.move(0,0,-1); else BootMouse.move(0,-1,0); break;
-      case FN_MOUSE_DOWN : if(config.wheel) BootMouse.move(0,0,1); else BootMouse.move(0,1,0); break;
+      case FN_MOUSE_UP : if(config.wheel) BootMouse.move(0,0,1); else BootMouse.move(0,-1,0); break;
+      case FN_MOUSE_DOWN : if(config.wheel) BootMouse.move(0,0,-1); else BootMouse.move(0,1,0); break;
       case FN_MOUSE_LEFT : BootMouse.move(-1,0,0); break;
       case FN_MOUSE_RIGHT : BootMouse.move(1,0,0); break;
       default : break;
@@ -101,10 +115,21 @@ bool pressFunction(KeyPos pos) {
 
 KeyboardKeycode keycodeOverride(KeyboardKeycode keyCode) {
   KeyboardKeycode actualCode=keyCode;
-  switch(keyCode) {
-    case KEY_DOWN_ARROW : if(config.wheel) actualCode=KEY_PAGE_DOWN; break;
-    case KEY_UP_ARROW : if(config.wheel) actualCode=KEY_PAGE_UP; break;
-    default : break;
+  if(config.mouse) {
+    switch(keyCode) {
+      // Ignore arrows when mouse is active
+      case KEY_DOWN_ARROW : actualCode=KEY_RESERVED; break;
+      case KEY_UP_ARROW : actualCode=KEY_RESERVED; break;
+      case KEY_LEFT_ARROW : actualCode=KEY_RESERVED; break;
+      case KEY_RIGHT_ARROW : actualCode=KEY_RESERVED; break;
+      default : break;
+    }
+  } else {
+    switch(keyCode) {
+      case KEY_DOWN_ARROW : if(config.wheel) actualCode=KEY_PAGE_DOWN; break;
+      case KEY_UP_ARROW : if(config.wheel) actualCode=KEY_PAGE_UP; break;
+      default : break;
+    }
   }
   return actualCode;
 }
@@ -152,8 +177,8 @@ uint8_t calcMouseMove(long kMillis, long mouseMoveStartMills, bool slow) {
 
 void keepMouseMoving(KeyRaw code, uint8_t move) {
   switch(code.function) {
-    case FN_MOUSE_UP : if(config.wheel) BootMouse.move(0,0,-move); else BootMouse.move(0,-move,0); break;
-    case FN_MOUSE_DOWN : if(config.wheel) BootMouse.move(0,0,move); else BootMouse.move(0,move,0); break;
+    case FN_MOUSE_UP : if(config.wheel) BootMouse.move(0,0,move); else BootMouse.move(0,-move,0); break;
+    case FN_MOUSE_DOWN : if(config.wheel) BootMouse.move(0,0,-move); else BootMouse.move(0,move,0); break;
     case FN_MOUSE_LEFT : BootMouse.move(-move,0,0); break;
     case FN_MOUSE_RIGHT : BootMouse.move(move,0,0); break;
     default : break;
@@ -175,7 +200,7 @@ void keepPressingFunctionKeys(long kMillis) {
   if(!mouseMoving) mouseMoveStartMills=kMillis;
   if(mouseMoving) move=calcMouseMove(kMillis,mouseMoveStartMills,config.wheel);
   for(uint8_t i=0;i<keyb.getSize();i++) {
-    KeyRaw code=keyb.getVal(i).code(config.layer);
+    KeyRaw code=functionOverride(keyb.getVal(i));
     if(mouseMoving && code.isMouseMove()) keepMouseMoving(code,move);
   }
 }
@@ -191,8 +216,8 @@ bool processPress(long kMillis) {
 
 bool releaseFunction(KeyPos pos) {
   bool released=false;
-  if(pos.code(config.layer).isFunction() && !keyDebouncer[pos.index()].isReleaseConfirmed()) {    
-    KeyRaw code=pos.code(config.layer);
+  KeyRaw code = functionOverride(pos);
+  if(code.isFunction() && !keyDebouncer[pos.index()].isReleaseConfirmed()) {    
     //Serial.println(code.function);
     switch(code.function) {
       case FN_SWITCH : config.layer=0; break;
@@ -250,6 +275,7 @@ bool processRelease(long kMillis) {
 
 void clearIfEmpty(long kMillis) {
   static long lastReleaseMillis=0;
+  //NOTE: isEmpty is true only if all keys (incl FN, Mouse, Wheel) are released! This means that the mouse speed-up will not reset until mouse button is released.
   if(keyb.isEmpty() && kMillis-lastReleaseMillis>RELEASE_MILLIS) {
     BootKeyboard.removeAll();
     BootKeyboard.send(); // this is actual effect!
