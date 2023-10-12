@@ -10,7 +10,7 @@
 #define TICK_PIN 23
 #define LED_TICKS 10
 
-KeyConfig config = {0,false}; // 0 - standard, 1 - F-keys + mouse (
+KeyConfig config = {0,false,false}; // 0 - standard, 1 - F-keys
 
 #define NUMPIXELS 8
 #define LED_PIN 11
@@ -83,6 +83,7 @@ bool pressFunction(KeyPos pos) {
     KeyRaw code=pos.code(config.layer);
     switch(code.function) {
       case FN_SWITCH : config.layer=1; break;
+      case FN_MOUSE : config.mouse=true; break;
       case FN_MOUSE_BTN_LEFT : BootMouse.press(MOUSE_LEFT); break;
       case FN_MOUSE_BTN_RIGHT : BootMouse.press(MOUSE_RIGHT); break;
       case FN_MOUSE_WHEEL : config.wheel=true; break;
@@ -195,6 +196,11 @@ bool releaseFunction(KeyPos pos) {
     //Serial.println(code.function);
     switch(code.function) {
       case FN_SWITCH : config.layer=0; break;
+      case FN_MOUSE : 
+        config.mouse=false; 
+        BootMouse.release(MOUSE_LEFT); // release buttons just in case they were pressed when mouse button was released
+        BootMouse.release(MOUSE_RIGHT);
+        break;
       case FN_MOUSE_BTN_LEFT : BootMouse.release(MOUSE_LEFT); break;
       case FN_MOUSE_BTN_RIGHT : BootMouse.release(MOUSE_RIGHT); break;
       case FN_MOUSE_WHEEL : config.wheel=false; break;
