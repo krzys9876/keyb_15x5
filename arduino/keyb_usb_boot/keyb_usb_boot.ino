@@ -85,16 +85,21 @@ KeyRaw functionOverride(KeyPos pos) {
       case KEY_LEFT_ARROW : ret.function = FN_MOUSE_LEFT; break;
       case KEY_RIGHT_ARROW : ret.function = FN_MOUSE_RIGHT; break;
     }
+    if(pos.isLeftSpace()) ret.function = FN_MOUSE_BTN_LEFT;
+    else if(pos.isRightSpace()) ret.function = FN_MOUSE_BTN_RIGHT;
   }
+  if(pos.isFn()) ret.function = FN_SWITCH;
+  else if(pos.isMouse()) ret.function = FN_MOUSE;
+  else if(pos.isWheel()) ret.function = FN_MOUSE_WHEEL;
+
   return ret;
 }
 
 bool pressFunction(KeyPos pos) {
   bool pressed=false;
-  Serial.println("pressed Function");
   KeyRaw code = functionOverride(pos);
+  //Serial.println("pressed Function "+String(pos.row)+" "+String(pos.col)+" "+String(COLmap[pos.col])+" "+String(pos.isLeftSpace())+" "+String(pos.isRightSpace())+" "+String(code.function));
   if(code.isFunction() && !keyDebouncer[pos.index()].isPressConfirmed()) {
-    KeyRaw code=pos.code(config.layer);
     switch(code.function) {
       case FN_SWITCH : config.layer=1; break;
       case FN_MOUSE : config.mouse=true; break;
@@ -113,10 +118,10 @@ bool pressFunction(KeyPos pos) {
   return pressed;
 }
 
-KeyboardKeycode keycodeOverride(KeyboardKeycode keyCode) {
-  KeyboardKeycode actualCode=keyCode;
+KeyboardKeycode keycodeOverride(KeyPos pos) {  
+  KeyboardKeycode actualCode=pos.code(config.layer).key;
   if(config.mouse) {
-    switch(keyCode) {
+    switch(actualCode) {
       // Ignore arrows when mouse is active
       case KEY_DOWN_ARROW : actualCode=KEY_RESERVED; break;
       case KEY_UP_ARROW : actualCode=KEY_RESERVED; break;
@@ -124,8 +129,9 @@ KeyboardKeycode keycodeOverride(KeyboardKeycode keyCode) {
       case KEY_RIGHT_ARROW : actualCode=KEY_RESERVED; break;
       default : break;
     }
+    if(pos.isLeftSpace() || pos.isRightSpace()) actualCode = KEY_RESERVED;
   } else {
-    switch(keyCode) {
+    switch(actualCode) {
       case KEY_DOWN_ARROW : if(config.wheel) actualCode=KEY_PAGE_DOWN; break;
       case KEY_UP_ARROW : if(config.wheel) actualCode=KEY_PAGE_UP; break;
       default : break;
@@ -141,7 +147,7 @@ bool pressNormal(KeyPos pos) {
     //if(index==functionIndex) Serial.println(String(keyDebouncer[index].isPressed()));
     KeyRaw code=pos.code(config.layer);
     if(code.mod!=KEY_RESERVED) BootKeyboard.add(code.mod);
-    KeyboardKeycode actualCode=keycodeOverride(code.key);
+    KeyboardKeycode actualCode=keycodeOverride(pos);
     if(actualCode!=KEY_RESERVED) BootKeyboard.add(actualCode);
     pressed=code.standardNonEmpty();
     //Serial.println("pressed " + String(code.key) + " (" + String(code.mod)+")");        
@@ -244,7 +250,7 @@ bool releaseNormal(KeyPos pos) {
     //if(index==functionIndex) Serial.println(String(keyDebouncer[index].isPressed()));
     KeyRaw code=pos.code(config.layer);
     if(code.mod!=KEY_RESERVED) BootKeyboard.remove(code.mod);
-    KeyboardKeycode actualCode=keycodeOverride(code.key);
+    KeyboardKeycode actualCode=keycodeOverride(pos);
     if(actualCode!=KEY_RESERVED) BootKeyboard.remove(actualCode);
     released=code.standardNonEmpty();
     //Serial.println("pressed " + String(code.key) + " (" + String(code.mod)+")");        
