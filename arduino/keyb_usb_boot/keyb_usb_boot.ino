@@ -290,6 +290,7 @@ void clearIfEmpty(long kMillis) {
     BootKeyboard.removeAll();
     BootKeyboard.send(); // this is actual effect!
     lastReleaseMillis=kMillis;
+    config.layer=0;
     for(uint8_t i=0;i<SIZE;i++) keyDebouncer[i].init();
   }
 }
