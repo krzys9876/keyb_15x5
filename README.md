@@ -12,12 +12,14 @@ Well, maybe this is not the most usefull and ergonomic way to handle mouse but h
 
 I tweaked the layout several times since than. The only constraint is the location of the 4 2u keys: space(s) and Enter.
 
+![keyb_15x5](https://github.com/krzys9876/keyb_15x5/assets/41650001/578f8d2b-9459-43b8-9f2d-6018d6815389)
+
 ## PCB
 
 I created a PCB and schematic sketch using excellent [klepcbgen tool](https://github.com/jeroen94704/klepcbgen). This was a good starting point to tweak the design to match my ideas. 
 I had some experience in designing PCBs and electonic circuits in general (see my [ZX Spectrum Diy project](https://github.com/krzys9876/ZX_Spectrum_diy) so it was quite easy. 
 
-But all in all it was not that great - I totally failed with LEDs since I did not use proper footprint for W2812B-2020 leds. So after I got the boards from JLCPBC it turned out that I cannot use LEDs at all. 
+But all in all it was not that great - I totally failed with LEDs since I did not use proper footprint for WS2812B-2020 leds. So after I got the boards from JLCPBC it turned out that I cannot use LEDs at all. 
 What you see now is a revised version that I did not (yet) put into production.
 
 Other than that the board worked perfectly.
